@@ -102,7 +102,6 @@ MANAGEMENT_ACTION="/Library/Application Support/JAMF/bin/Management Action.app/C
 JAMF_CACHE="/Library/Application Support/JAMF/Waiting Room"
 currentuser=$(ls -l /dev/console | cut -d " " -f 4)
 skipping_counter_dir="/Library/Application Support/Scripts/magic_installer"
-# skipping_counter_dir="/Library/Application Support/Scripts/magic_installer"
 [[ -d "${skipping_counter_dir}" ]] || mkdir -p "${skipping_counter_dir}"
 waiting_duration=( 86400 14400 7200 1800 300 ) # 0 will deactivate the countdown
 now="$(date +%s)"
