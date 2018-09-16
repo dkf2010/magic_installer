@@ -40,7 +40,7 @@
 #       process to watch. Use ; as delimiter for multiple process names
 #       Example:
 #         "firefox"
-#         "firefox;safari"
+#         "firefox;safari$"
 #
 #   appVersion (Optional)
 #       Version Number from the app which will be installed.
@@ -101,11 +101,11 @@ JAMF_ICONS="/Library/Application Support/JAMF/bin/jamfHelper.app/Contents/Resour
 MANAGEMENT_ACTION="/Library/Application Support/JAMF/bin/Management Action.app/Contents/MacOS/Management Action"
 JAMF_CACHE="/Library/Application Support/JAMF/Waiting Room"
 currentuser=$(ls -l /dev/console | cut -d " " -f 4)
-skipping_counter_dir="/Library/Application Support/Scripts/magic_installer"
+skipping_counter_dir="/Library/Application Support/Scripts/magic_installer" # Edit me
 [[ -d "${skipping_counter_dir}" ]] || mkdir -p "${skipping_counter_dir}"
 waiting_duration=( 86400 14400 7200 1800 300 ) # 0 will deactivate the countdown
 now="$(date +%s)"
-identifier="com.mycompany"
+identifier="com.mycompany" # Edit me
 
 displayUserMessage () {
 	MY_MESSAGE="${1}"
@@ -307,7 +307,7 @@ else
         # ScriptLog "forced installation will be activated."
         echo "forced installation will be activated."
         norerunbefore="$(tail -n 1 "${skipping_counter}")"
-        logRepeat=$(grep "${displayname}" "${logFile}" | tail -n 1 | grep -c "norerunbefore")
+        logRepeat=$(grep "${displayname}" "${logFile}" 2>/dev/null | tail -n 1 | grep -c "norerunbefore")
         [[ -z "${norerunbefore}" ]] && norerunbefore=0
         [[ "${logRepeat}" -eq 0 ]] && ScriptLog "norerunbefore: $(date -r ${norerunbefore} +"%d.%m.%Y %H:%M:%S")"
         # ScriptLog "now:           $(date -r ${now} +"%d.%m.%Y %H:%M:%S")"
@@ -365,7 +365,7 @@ else
         fi
     else
         loggedInUser=$(/bin/ls -l /dev/console | /usr/bin/awk '{ print $3 }')
-        logRepeat=$(grep "${displayname}" "${logFile}" | tail -n 1 | grep -c "is logged in and app is running")
+        logRepeat=$(grep "${displayname}" "${logFile}" 2>/dev/null | tail -n 1 | grep -c "is logged in and app is running")
         [[ "${logRepeat}" -eq 0 ]] && ScriptLog "User \"${loggedInUser}\" is logged in and app is running. Exiting."
     fi
 
