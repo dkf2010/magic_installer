@@ -361,7 +361,7 @@ else
         else
             now2="$(date +%s)"
             timeout2=$(( norerunbefore - now2 ))
-            ScriptLog "Skipping. Next run at $(date -r ${norerunbefore} +"%d.%m.%Y %H:%M:%S")"
+            # ScriptLog "Skipping. Next run at $(date -r ${norerunbefore} +"%d.%m.%Y %H:%M:%S")"
         fi
     else
         loggedInUser=$(/bin/ls -l /dev/console | /usr/bin/awk '{ print $3 }')
