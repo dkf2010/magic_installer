@@ -95,17 +95,27 @@ ScriptLog() { # Re-direct logging to the log file ...
 	exec 1>&3 2>&4
 }
 
+removeLaunchDaemon() {
+    ScriptLog "Removing LaunchDaemon \"${identifier}.magic_installer_${appname}.plist\""
+    launchctl list "${identifier}.magic_installer_${appname}" > /dev/null 2>&1
+    launchctlError=$?
+    if [[ "${launchctlError}" -eq 0 ]]; then
+        rm -f "/Library/LaunchDaemons/${identifier}.magic_installer_${appname}.plist"
+        launchctl remove "${identifier}.magic_installer_${appname}"
+    fi
+}
+
 JAMF="/usr/local/bin/jamf"
 JAMF_HELPER="/Library/Application Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper"
 JAMF_ICONS="/Library/Application Support/JAMF/bin/jamfHelper.app/Contents/Resources"
 MANAGEMENT_ACTION="/Library/Application Support/JAMF/bin/Management Action.app/Contents/MacOS/Management Action"
 JAMF_CACHE="/Library/Application Support/JAMF/Waiting Room"
 currentuser=$(ls -l /dev/console | cut -d " " -f 4)
-skipping_counter_dir="/Library/Application Support/Scripts/magic_installer" # Edit me
+identifier="com.mycompany" # Do not edit. Will be modified by the container script.
+skipping_counter_dir="/Library/Application Support/Scripts/magic_installer" # Do not edit. Will be modified by the container script.
 [[ -d "${skipping_counter_dir}" ]] || mkdir -p "${skipping_counter_dir}"
 waiting_duration=( 86400 14400 7200 1800 300 ) # 0 will deactivate the countdown
 now="$(date +%s)"
-identifier="com.mycompany" # Edit me
 
 displayUserMessage () {
 	MY_MESSAGE="${1}"
@@ -120,6 +130,10 @@ displayUserMessage () {
         [[ -f "/System/Library/CoreServices/Software Update.app/Contents/Resources/SoftwareUpdate.icns" ]];
         then
 		icon="/System/Library/CoreServices/Software Update.app/Contents/Resources/SoftwareUpdate.icns"
+	elif
+        [[ -f "/System/Library/CoreServices/Install Command Line Developer Tools.app/Contents/Resources/SoftwareUpdate.icns" ]];
+        then
+		icon="/System/Library/CoreServices/Install Command Line Developer Tools.app/Contents/Resources/SoftwareUpdate.icns"
 	else
 		icon="${JAMF_ICONS}/Message.png"
 	fi
@@ -256,7 +270,7 @@ installpkgs() {
     for pkg in "${pkgarray[@]}"
     do
         ScriptLog "Installing \"${JAMF_CACHE}/${pkg}\""
-        "${JAMF}" install -package "${pkg}" -path "${JAMF_CACHE}" -target / >> /var/log/magic.log 2>&1
+        "${JAMF}" install -package "${pkg}" -path "${JAMF_CACHE}" -target / >> "${logFile}" 2>&1
         exitcode=$?
         ScriptLog "Installer done with exitcode $exitcode"
         [[ "${#pkgarray[@]}" -gt 1 ]] && /bin/sleep 2
@@ -273,15 +287,6 @@ installpkgs() {
     ScriptLog "Fertig."
 }
 
-removeLaunchDaemon() {
-    ScriptLog "Removing LaunchDaemon \"${identifier}.magic_installer_${appname}.plist\""
-    launchctl list "${identifier}.magic_installer_${appname}" > /dev/null 2>&1
-    launchctlError=$?
-    if [[ "${launchctlError}" -eq 0 ]]; then
-        rm -f "/Library/LaunchDaemons/${identifier}.magic_installer_${appname}.plist"
-        launchctl remove "${identifier}.magic_installer_${appname}"
-    fi
-}
 
 if
     [[ -n "${appVersionOld}" ]] &&
@@ -361,6 +366,7 @@ else
         else
             now2="$(date +%s)"
             timeout2=$(( norerunbefore - now2 ))
+            echo "Next run:      $(date -r ${norerunbefore} +"%d.%m.%Y %H:%M:%S")"
             # ScriptLog "Skipping. Next run at $(date -r ${norerunbefore} +"%d.%m.%Y %H:%M:%S")"
         fi
     else
