@@ -1,6 +1,6 @@
-#!/bin/bash
+#!/bin/zsh
 ################################################################################
-# Dennis Kruemmel, 2018
+# Dennis Philipps, 2018-2023
 #
 # with content from
 #   https://github.com/homebysix/auto-update-magic
@@ -72,9 +72,10 @@
 #         "/Applications/Firefox.app/Contents/Resources/firefox.icns"
 #
 #   appVersionOld (Optional)
-#       command to determine the version from the old installed app.
+#       define the "defaults read" parameter to determine the version from the old installed app.
 #       Example:
-#         "defaults read /Applications/Firefox.app/Contents/Info.plist CFBundleShortVersionString"
+#         "/Applications/Firefox.app/Contents/Info.plist" CFBundleShortVersionString
+#         defaults read /Applications/Firefox.app/Contents/Info.plist CFBundleShortVersionString
 ################################################################################
 
 logFile="/var/log/magic_installer.log"
@@ -163,12 +164,26 @@ displayUserMessage () {
 
 }
 
-compareVersion (){
-    /usr/bin/python - "$1" "$2" << EOF
-import sys
-from distutils.version import LooseVersion as LV
-print LV(sys.argv[1]) >= LV(sys.argv[2])
-EOF
+compareVersion () {
+    versions=($1 $2)
+
+    # Sort the versions using version sort
+    sorted_versions=("${(@on)versions}")
+
+    # Get the latest version (last element after sorting)
+    latest_version="${sorted_versions[-1]}"
+
+    # Check if the given versions are equal to the latest version
+    if [[ $1 == $latest_version && $2 == $latest_version ]]; then
+        # Both versions are equal
+        return 0
+    elif [[ $1 == $latest_version ]]; then
+        # newest version already installed
+        return 0
+    else
+        # newer version available
+        return 1
+    fi
 }
 
 if [ -n "${4}" ]; then
@@ -287,6 +302,15 @@ installpkgs() {
     ScriptLog "Fertig."
 }
 
+removeLaunchDaemon() {
+    ScriptLog "Removing LaunchDaemon \"${identifier}.magic_installer_${appname}.plist\""
+    launchctl list "${identifier}.magic_installer_${appname}" > /dev/null 2>&1
+    launchctlError=$?
+    if [[ "${launchctlError}" -eq 0 ]]; then
+        rm -f "/Library/LaunchDaemons/${identifier}.magic_installer_${appname}.plist"
+        launchctl remove "${identifier}.magic_installer_${appname}"
+    fi
+}
 
 if
     [[ -n "${appVersionOld}" ]] &&
