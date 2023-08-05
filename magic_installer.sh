@@ -302,16 +302,6 @@ installpkgs() {
     ScriptLog "Fertig."
 }
 
-removeLaunchDaemon() {
-    ScriptLog "Removing LaunchDaemon \"${identifier}.magic_installer_${appname}.plist\""
-    launchctl list "${identifier}.magic_installer_${appname}" > /dev/null 2>&1
-    launchctlError=$?
-    if [[ "${launchctlError}" -eq 0 ]]; then
-        rm -f "/Library/LaunchDaemons/${identifier}.magic_installer_${appname}.plist"
-        launchctl remove "${identifier}.magic_installer_${appname}"
-    fi
-}
-
 if
     [[ -n "${appVersionOld}" ]] &&
     [[ -n "${appVersion}" ]] &&
